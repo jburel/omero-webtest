@@ -9,7 +9,7 @@ from omeroweb.webgateway import views as webgateway_views
 
 from omeroweb.webclient.decorators import login_required, render_response
 
-from cStringIO import StringIO
+from io import StringIO
 
 import logging
 import omero
@@ -282,7 +282,7 @@ def add_annotations(request, conn=None, **kwargs):
     """
     id_list = request.REQUEST.get('imageIds', None)    # comma - delimited list
     if id_list:
-        image_ids = [long(i) for i in id_list.split(",")]
+        image_ids = [int(i) for i in id_list.split(",")]
     else:
         image_ids = []
 
@@ -342,7 +342,7 @@ def split_view_figure(request, conn=None, **kwargs):
     id_list = request.REQUEST.get('imageIds', None)  # comma - delimited list
     id_list = request.REQUEST.get('Image', id_list)  # we also support 'Image'
     if id_list:
-        image_ids = [long(i) for i in id_list.split(",")]
+        image_ids = [int(i) for i in id_list.split(",")]
     else:
         image_ids = []
 
@@ -415,7 +415,7 @@ def split_view_figure(request, conn=None, **kwargs):
     size = {"height": height, "width": width}
     c_strs = []
     if channels:    # channels will be none when page first loads (no images)
-        indexes = range(1, len(channels)+1)
+        indexes = list(range(1, len(channels)+1))
         c_string = ",".join(["-%s" % str(c) for c in indexes])  # e.g. -1,-2
         merged_flags = []
         for i, c, in enumerate(channels):
@@ -574,11 +574,11 @@ def image_dimensions(request, image_id, conn=None, **kwargs):
     default_y_dim = 'Z'
 
     x_dim = request.REQUEST.get('xDim', 'C')
-    if x_dim not in dims.keys():
+    if x_dim not in list(dims.keys()):
         x_dim = 'C'
 
     y_dim = request.REQUEST.get('yDim', default_y_dim)
-    if y_dim not in dims.keys():
+    if y_dim not in list(dims.keys()):
         y_dim = 'Z'
 
     x_frames = int(request.REQUEST.get('xFrames', 5))
@@ -589,8 +589,8 @@ def image_dimensions(request, image_id, conn=None, **kwargs):
     x_frames = min(x_frames, x_size)
     y_frames = min(y_frames, y_size)
 
-    x_range = range(x_frames)
-    y_range = range(y_frames)
+    x_range = list(range(x_frames))
+    y_range = list(range(y_frames))
 
     # 2D array of (theZ, theC, theT)
     grid = []
@@ -625,7 +625,7 @@ def image_dimensions(request, image_id, conn=None, **kwargs):
 def image_rois(request, image_id, conn=None, **kwargs):
     """ Simply shows a page of ROI thumbnails for the specified image """
     roi_service = conn.getRoiService()
-    result = roi_service.findByImage(long(image_id), None, conn.SERVICE_OPTS)
+    result = roi_service.findByImage(int(image_id), None, conn.SERVICE_OPTS)
     roi_ids = [r.getId().getValue() for r in result.rois]
     return render(request, 'webtest/demo_viewers/image_rois.html',
                   {'roiIds': roi_ids})
